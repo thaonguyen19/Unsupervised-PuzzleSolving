@@ -3,13 +3,13 @@ from keras.layers.core import Flatten, Dense, Dropout
 from keras.layers.convolutional import Convolution2D, MaxPooling2D, ZeroPadding2D
 from keras import backend as K
 
-def VGG16(input_shape=224, output_dim=1000, include_top=True):
+def VGG16(input_dim=224, input_depth=3, output_dim=1000, include_top=True):
     # Determine proper input shape
     if K.image_dim_ordering() == 'th':
-        input_shape = (3, input_shape, input_shape)
+        input_shape = (input_depth, input_dim, input_dim)
         bn_axis = 3
     else:
-        input_shape = (input_shape, input_shape, 3)
+        input_shape = (input_dim, input_dim, input_depth)
         bn_axis = 1
 
     img_input = Input(shape=input_shape)
