@@ -1,6 +1,4 @@
 import numpy as np 
-import os
-import random
 import multiprocessing as mp
 from keras import backend as K
 from PIL import Image
@@ -21,36 +19,38 @@ def mean_subtract(img):
     return img
 
 class DataGenerator(object):
-    def __init__(self, path, dim_h, dim_w, batch_size=256, n_permutations=3, proportion_use=0.5, patch_size=64):
+    def __init__(self, files, dim_h, dim_w, batch_size=256, n_permutations=6, patch_size=64):
         """
         dim_h, dim_w : dimensions of the 3x3 grid cropped from initial image
         n_permutations: number of different patch permutations of each training image
         proportion_use: proportion of the 1.3M ImageNet data used for training
         patch_size: final size of each patch in the 3x3 grid
         """
-    	self.path = path
+    	#self.path = path
         self.dim_h = dim_h
         self.dim_w = dim_w
         self.batch_size = batch_size
         self.n_permutations = n_permutations
         self.patch_size = patch_size
         self.max_steps = 0
+        self.files = files
 
-    def __load_data(self):
-        all_classes = os.listdir(self.path)
-        for c in all_classes:
-            class_path = os.path.join(self.path, c)
-            image_files = [os.path.join(class_path, file) for file in os.listdir(class_path)]
-            n_selected = round(len(image_files)*proportion_use)
-            selected_files = random.sample(image_files, n_selected) 
-            all_data += selected_files
-        random.shuffle(all_data)
-        print "number of training data: " + len(all_data)
-        return all_data
+    # def __load_data(self):
+    #     all_classes = os.listdir(self.path)
+    #     for c in all_classes:
+    #         class_path = os.path.join(self.path, c)
+    #         image_files = [os.path.join(class_path, file) for file in os.listdir(class_path)]
+    #         n_selected = round(len(image_files)*proportion_use)
+    #         selected_files = random.sample(image_files, n_selected) 
+    #         all_data += selected_files
+    #     random.shuffle(all_data)
+    #     print "number of training data: " + len(all_data)
+    #     return all_data
 
     def generate(self):
-        all_files = self.__load_data()
-        for i in range(self.n_permutations):
+        #all_files = self.__load_data()
+        all_files = self.files
+        for i in range(self.n_permutations-1):
             all_files += all_files
         self.max_steps = int(len(all_files)/self.batch_size)
         while True:
@@ -94,7 +94,7 @@ class DataGenerator(object):
         pool = mp.pool(8)
         pil_imgs = pool.map(load_image, selected_files)
         imgs = pool.map(mean_subtract, imgs)
-        cropper = functools.partial(random_crop, dim_h=self.dim_h, dim_w=self.dim_w) #225x225 crop
+        cropper = functools.partial(random_crop, dim_h=self.dim_h, dim_w=self.dim_w) #256x256 crop
         imgs = pool.map(cropper, pil_imgs) 
         pool.close()
         pool.join()
