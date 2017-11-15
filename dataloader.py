@@ -3,6 +3,7 @@ import multiprocessing as mp
 from keras import backend as K
 from PIL import Image
 import functools
+import random
 
 def random_crop(img, dim_h, dim_w):
     h, w = img.shape[0], img.shape[1]
@@ -52,6 +53,7 @@ class DataGenerator(object):
         all_files = self.files
         for i in range(self.n_permutations-1):
             all_files += all_files
+        random.shuffle(all_files)
         self.max_steps = int(len(all_files)/self.batch_size)
         while True:
             for i in range(self.max_steps):
