@@ -1,6 +1,6 @@
-from keras.models import Sequential
-from keras.layers.core import Flatten, Dense, Dropout
-from keras.layers.convolutional import Convolution2D, MaxPooling2D, ZeroPadding2D
+from keras.models import Model, Sequential
+from keras.layers import Input, Flatten, Dense, Dropout
+from keras.layers import Conv2D, MaxPooling2D, ZeroPadding2D
 from keras import backend as K
 
 def VGG16(input_dim=224, input_depth=3, output_dim=1000, include_top=True):
@@ -47,7 +47,12 @@ def VGG16(input_dim=224, input_depth=3, output_dim=1000, include_top=True):
         x = Dense(4096, activation='relu', name='fc1')(x)
         x = Dense(4096, activation='relu', name='fc2')(x)
         x = Dense(output_dim, activation='softmax', name='predictions')(x)
-    return x
+    full_model = Model(inputs=img_input, outputs=x)
+    return full_model
+
+if __name__ == '__main__':
+    model = VGG16(input_dim=224, input_depth=3, output_dim=1000, include_top=True)
+    print model.summary()
 
 
 # def VGG_16():
