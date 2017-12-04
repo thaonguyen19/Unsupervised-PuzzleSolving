@@ -59,7 +59,7 @@ class DataLoader(object):
         print len(self.files)
         print "done preparing files"
         self.max_steps = int(len(self.files)/self.batch_size)
-    
+
     @threadsafe_generator
     def generate(self):
         while True:
@@ -104,17 +104,18 @@ class DataLoader(object):
             shuffled_patches = []
             for i in permutation_order:
                 shuffled_patches.append(patches[i])
-            return np.dstack(shuffled_patches), permutation_order
+            permutation_normalized = [i*1.0/sum(permutation_order) for i in permutation_order] 
+            return np.dstack(shuffled_patches), permutation_normalized
 
         #pool = mp.pool(8)
         pil_imgs = map(load_image, selected_files)
         imgs = map(img_to_array, pil_imgs)
-        cropper = functools.partial(random_crop, dim_h=self.dim_h, dim_w=self.dim_w) 
+        cropper = functools.partial(random_crop, dim_h=self.dim_h, dim_w=self.dim_w) #256x256 crop
         imgs = map(cropper, imgs)
         imgs = map(mean_subtract, imgs) 
         #pool.close()
         #pool.join()
-        patch_list, permute_list = zip(*map(generate_patches, imgs)) 
+        patch_list, permute_list = zip(*map(generate_patches, imgs))
         #list of dim_h x dim_w x 27 patches from each img file, list of 9-element lists
         Y = np.vstack(permute_list)
         X = np.stack(patch_list)
