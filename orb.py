@@ -71,18 +71,18 @@ def keypoint_central_crop(img, dim_h, dim_w, kp):
     return corner
 
 
-def orb_crop(detector, img_array, dim_h, dim_w):
-    img_pil = Image.fromarray(img_array)
+def orb_crop(img_array, detector, dim_h, dim_w):
+    img_pil = Image.fromarray(img_array.astype('uint8'))
     img_grayscale = img_pil.convert(mode="L")
-    kp = detector.detect(img,None)
-    corner = keypoint_central_crop(img, dim_h, dim_w, kp)
+    img_grayscale = np.asarray(img_grayscale)
+    kp = detector.detect(img_grayscale,None)
+    corner = keypoint_central_crop(img_grayscale, dim_h, dim_w, kp)
     return img_array[corner[0]:(corner[0]+dim_h), corner[1]:(corner[1]+dim_w), :]
 
 if __name__ == '__main__':
     img_path = '/Users/Thao/ILSVRC2012_img_val/n02106382/ILSVRC2012_val_00027219.JPEG'
     #img_path = '/Users/Thao/ILSVRC2012_img_val/n03709823/ILSVRC2012_val_00000435.JPEG'
     img = cv2.imread(img_path, 0)
-    print type(img)
     cv2.imshow('img', img)
     cv2.waitKey(0)
 
@@ -105,9 +105,10 @@ if __name__ == '__main__':
 
     img_array = Image.open(img_path).convert('RGB')
     img_array = np.asarray(img_array)
-    img4 = orb_crop(orb, img_array, 255, 255)
-    #img4 = Image.fromarray(img4)
-    #img4.save('test3.png')
+    img4 = orb_crop(img_array, orb, 255, 255)
+
+    img4 = Image.fromarray(img4)
+    img4.save('random3.png')
 
     img5 = random_crop(img, 255, 255)
     cv2.imshow('img5', img5)

@@ -1,4 +1,3 @@
-#https://stanford.edu/~shervine/blog/keras-how-to-generate-data-on-the-fly.html
 from dataloader import *
 from VGG import *
 from keras.optimizers import SGD, Adam
@@ -65,6 +64,8 @@ def train_puzzle():
             optimal_hamming = find_ave_hamming(all_permutations_arranged)
         print optimal_hamming
         all_permutations_arranged = rearrange_greedy(all_permutations)
+        while find_ave_hamming(all_permutations_arranged) > 0.77:
+            all_permutations_arranged = rearrange_greedy(all_permutations)
         if find_ave_hamming(all_permutations_arranged) < optimal_hamming:
             all_permutations = all_permutations_arranged
             optimal_hamming = find_ave_hamming(all_permutations_arranged)
