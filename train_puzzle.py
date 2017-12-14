@@ -56,18 +56,19 @@ def train_puzzle():
     from tensorflow.python.client import device_lib
     print device_lib.list_local_devices()
     all_permutations = generate_all_permutations()
-    optimal_hamming = find_ave_hamming(all_permutations)
-    print optimal_hamming
-    all_permutations_arranged = rearrange_cluster(all_permutations)
-    if find_ave_hamming(all_permutations_arranged) < optimal_hamming:
-        all_permutations = all_permutations_arranged
-        optimal_hamming = find_ave_hamming(all_permutations_arranged)
-    print optimal_hamming
-    all_permutations_arranged = rearrange_greedy(all_permutations)
-    if find_ave_hamming(all_permutations_arranged) < optimal_hamming:
-        all_permutations = all_permutations_arranged
-        optimal_hamming = find_ave_hamming(all_permutations_arranged)
-    print optimal_hamming
+    if loss_hamming:
+        optimal_hamming = find_ave_hamming(all_permutations)
+        print optimal_hamming
+        all_permutations_arranged = rearrange_cluster(all_permutations)
+        if find_ave_hamming(all_permutations_arranged) < optimal_hamming:
+            all_permutations = all_permutations_arranged
+            optimal_hamming = find_ave_hamming(all_permutations_arranged)
+        print optimal_hamming
+        all_permutations_arranged = rearrange_greedy(all_permutations)
+        if find_ave_hamming(all_permutations_arranged) < optimal_hamming:
+            all_permutations = all_permutations_arranged
+            optimal_hamming = find_ave_hamming(all_permutations_arranged)
+        print optimal_hamming
 
     train_files, val_files = load_data(DATA_PATH, val_ratio=0.1)
     trainLoader = DataLoader(train_files, all_permutations, dim_h=DIM_H, dim_w=DIM_W, batch_size=BATCH_SIZE, \

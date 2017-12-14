@@ -1,6 +1,5 @@
 import numpy as np
 import cv2
-from matplotlib import pyplot as plt
 from PIL import Image
 
 def random_crop(img, dim_h, dim_w):
