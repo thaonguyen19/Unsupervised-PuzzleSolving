@@ -11,12 +11,14 @@ import random
 from keras.models import Model
 from keras import backend as K
 from keras.callbacks import EarlyStopping, ModelCheckpoint
+from hamming_optimization import *
 
 DATA_PATH = "/lfs/1/ddkang/specializer/imagenet/ILSVRC2012_img_val"
 DIM_H = DIM_W = 255
 PATCH_SIZE = 76
 BATCH_SIZE = 64
-#RESUME_FILE = "weights-15-0.64.hdf5"
+loss_hamming = True
+RESUME_FILE = None #"weights-15-0.64.hdf5"
 
 def load_data(path, val_ratio):
     all_data = []
@@ -28,17 +30,6 @@ def load_data(path, val_ratio):
     val_files = all_data[:n_val_files]
     train_files = all_data[n_val_files:]
     return train_files, val_files
-
-def generate_all_permutations():
-    all_permutations = []
-    count = 0
-    while count < 64:
-        l = list(range(1, 10))
-        random.shuffle(l)
-        if l not in all_permutations:
-            all_permutations.append(l)
-            count += 1
-    return all_permutations
 
 def PuzzleModel(input_shape=(76,76,27)): #input_shape from data generato
     assert K.image_dim_ordering() == 'tf'
@@ -65,6 +56,19 @@ def train_puzzle():
     from tensorflow.python.client import device_lib
     print device_lib.list_local_devices()
     all_permutations = generate_all_permutations()
+    optimal_hamming = find_ave_hamming(all_permutations)
+    print optimal_hamming
+    all_permutations_arranged = rearrange_cluster(all_permutations)
+    if find_ave_hamming(all_permutations_arranged) < optimal_hamming:
+        all_permutations = all_permutations_arranged
+        optimal_hamming = find_ave_hamming(all_permutations_arranged)
+    print optimal_hamming
+    all_permutations_arranged = rearrange_greedy(all_permutations)
+    if find_ave_hamming(all_permutations_arranged) < optimal_hamming:
+        all_permutations = all_permutations_arranged
+        optimal_hamming = find_ave_hamming(all_permutations_arranged)
+    print optimal_hamming
+
     train_files, val_files = load_data(DATA_PATH, val_ratio=0.1)
     trainLoader = DataLoader(train_files, all_permutations, dim_h=DIM_H, dim_w=DIM_W, batch_size=BATCH_SIZE, \
                                 n_permutations=20, patch_size=PATCH_SIZE)
@@ -73,11 +77,14 @@ def train_puzzle():
                                 n_permutations=2, patch_size=PATCH_SIZE)
     val_generator = valLoader.generate()
     model = PuzzleModel(input_shape=(PATCH_SIZE, PATCH_SIZE, 27))
-    #model.load_weights(RESUME_FILE)
+    filepath = "weights-{epoch:02d}-{val_acc:.2f}.hdf5"
+    if RESUME_FILE:
+        print "RESUME TRAINING ..."
+        model.load_weights(RESUME_FILE)
+        filepath = "weights-resumed-{epoch:02d}-{val_acc:.2f}.hdf5"
     optimizer = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=False)
     model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
     es = EarlyStopping(monitor='val_loss', patience=5, verbose=0, mode='auto')
-    filepath = "weights-resumed-{epoch:02d}-{val_acc:.2f}.hdf5"
     checkpoint = ModelCheckpoint(filepath, monitor='val_acc', verbose=1, save_best_only=True, mode='max')
     callbacks_list = [es, checkpoint]
     model.fit_generator(generator = train_generator, \
