@@ -6,6 +6,10 @@ import functools
 import random
 from keras.preprocessing.image import img_to_array
 import threading
+from orb import keypoint_crop
+import cv2
+
+keypoint_generate = True
 
 def random_crop(img, dim_h, dim_w):
     h, w = img.shape[0], img.shape[1]
@@ -40,7 +44,7 @@ def threadsafe_generator(f):
     return g
 
 class DataLoader(object):
-    def __init__(self, files, dim_h, dim_w, batch_size=256, n_permutations=6, patch_size=64):
+    def __init__(self, files, dim_h, dim_w, batch_size=128, n_permutations=6, patch_size=64):
         """
         dim_h, dim_w : dimensions of the 3x3 grid cropped from initial image
         n_permutations: number of different patch permutations of each training image
@@ -90,6 +94,11 @@ class DataLoader(object):
             4 5 6
             7 8 9
             '''
+            if not keypoint_generate:
+                img = random_crop(img, self.dim_h, self.dim_w)
+            else:#use ORB feature
+                orb = cv2.ORB_create()
+                img = orb_crop(orb, img, self.dim_h, self.dim_w)
             patches = []
             h, w = img.shape[0], img.shape[1]
             patch_h, patch_w = h//3, w//3
@@ -110,6 +119,11 @@ class DataLoader(object):
         #pool = mp.pool(8)
         pil_imgs = map(load_image, selected_files)
         imgs = map(img_to_array, pil_imgs)
+        if keypoint_generate: #use ORB feature
+            import cv2
+            orb = cv2.ORB_create()
+            imgs = map(keypoint_crop, orb)
+
         cropper = functools.partial(random_crop, dim_h=self.dim_h, dim_w=self.dim_w) #256x256 crop
         imgs = map(cropper, imgs)
         imgs = map(mean_subtract, imgs) 
