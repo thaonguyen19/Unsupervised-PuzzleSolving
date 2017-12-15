@@ -122,8 +122,7 @@ class DataLoader(object):
         pil_imgs = map(load_image, selected_files)
         imgs = map(img_to_array, pil_imgs)
         if keypoint_generate: #use ORB feature
-            orb = cv2.ORB_create()
-            orb_cropper = functools.partial(orb_crop, detector=orb, dim_h=self.dim_h, dim_w=self.dim_w)
+            orb_cropper = functools.partial(orb_crop, dim_h=self.dim_h, dim_w=self.dim_w)
             imgs = map(orb_cropper, imgs)
         else:
             cropper = functools.partial(random_crop, dim_h=self.dim_h, dim_w=self.dim_w) #256x256 crop

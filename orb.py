@@ -71,11 +71,15 @@ def keypoint_central_crop(img, dim_h, dim_w, kp):
     return corner
 
 
-def orb_crop(img_array, detector, dim_h, dim_w):
+def orb_crop(img_array, dim_h, dim_w):
+    orb = cv2.ORB_create()
     img_pil = Image.fromarray(img_array.astype('uint8'))
     img_grayscale = img_pil.convert(mode="L")
     img_grayscale = np.asarray(img_grayscale)
-    kp = detector.detect(img_grayscale,None)
+    kp = orb.detect(img_grayscale,None)
+    if len(kp) == 0:
+        return random_crop(img_array, dim_h, dim_w)
+        
     corner = keypoint_central_crop(img_grayscale, dim_h, dim_w, kp)
     return img_array[corner[0]:(corner[0]+dim_h), corner[1]:(corner[1]+dim_w), :]
 
